@@ -73,6 +73,20 @@ Feature coefficients show seasonal/monthly terms still dominating (`Season_Winte
 
 Chart saved in `Visualisations/Models/`: actual-vs-predicted and residual plots.
 
+## Final Model Comparison — Linear Regression vs. Random Forest vs. Tuned XGBoost
+
+| Model | RMSE (MWh) | MAE (MWh) | R² |
+|---|---|---|---|
+| **XGBoost (Tuned)** | **1555.44** | **1142.42** | **0.846** |
+| Random Forest | 1930.28 | 1315.89 | 0.763 |
+| Linear Regression (baseline) | 3631.05 | 2883.90 | 0.163 |
+
+**Best-performing model: XGBoost (Tuned)** — selected as the final model for this phase of the project.
+
+**Interpretation:** Hyperparameter tuning pushed XGBoost from being slightly behind Random Forest (as an untuned model) to clearly ahead of it — improving RMSE by ~19% and R² by over 8 percentage points relative to Random Forest, and roughly 5x better R² than the linear baseline. This confirms the relationship between weather/time features and Production is strongly non-linear, and that boosting's sequential error-correction approach captures that structure better than a single bagged ensemble once properly tuned.
+
+Comparison chart saved in `Visualisations/Models/`. Full results saved to `Data/ModelResults/final_model_comparison.csv`.
+
 ## Status
 - Data Preparation: complete (updated with weather features)
 - EDA: complete (weather-specific charts and updated correlation heatmap in progress)
