@@ -20,7 +20,7 @@ Renewable energy sources like solar and wind are inherently variable, as output 
 - Raw dataset (no weather): `Data/Raw/Energy Production Dataset.csv`
 - Weather-enriched raw dataset: `Data/Modified Dataset/Dataset_with_Weather_features.csv`
 
-Weather features were merged in to strengthen prediction accuracy and to support the project's second phase, a household renewable energy recommendation system, which will also rely on location-based weather data.
+Weather features were merged in to strengthen prediction accuracy and to support the project's second phase — a household renewable energy recommendation system, which will also rely on location-based weather data.
 
 ## Approach
 1. **Data Preparation**: cleaning, validation, and encoding (including new weather features)
@@ -39,7 +39,7 @@ Weather features were merged in to strengthen prediction accuracy and to support
 - Validated new weather columns: `Humidity_Percent` (0–100), `Precipitation_mm` and `WindSpeed_kmh` (non-negative), `Rainfall_Flag` (Yes/No only)
 - Confirmed clean, consistent categorical values across `Source`, `Season`, `Day_Name`, `Month_Name`, and `Rainfall_Flag`
 - One-hot encoded categorical features and converted boolean columns to integer (0/1) format for model compatibility
-- Final dataset: 51,862 clean rows, saved in two versions, a readable version for EDA and an encoded version for modeling
+- Final dataset: 51,862 clean rows, saved in two versions — a readable version for EDA and an encoded version for modeling
 
 ## EDA Summary and Key Findings
 | Finding | Insight |
@@ -51,35 +51,36 @@ Weather features were merged in to strengthen prediction accuracy and to support
 | Solar Peak | 13:00 (8,476 MWh) |
 | Best Predictor | Start_Hour (correlation: 0.51) |
 | Day of Week | No significant difference |
-| Weather Factors | WindSpeed shows positive correlation with Production; Temperature and Rainfall have weaker effects |
-| Correlation Insights | Day_of_Year and Month are highly correlated (redundant, keep only one for modeling); Multicollinearity not a serious issue among key features |
 
-**Visualizations generated** (saved in `Visualisations/EDA/`), including production distribution, categorical breakdowns, source/season/hour/day patterns, outlier checks, source × season interaction, monthly production, year-over-year trend (2020–2025), weather-specific charts (Production vs. Temperature, Production vs. Wind Speed, Rainy vs. Non-Rainy day comparison), and updated full correlation heatmap (includes all encoded categorical features) plus production correlation bar chart.
+**Visualizations generated** (saved in `Visualisations/EDA/`), including production distribution, categorical breakdowns, source/season/hour/day patterns, outlier checks, correlation heatmap (updated to include weather features), source × season interaction, monthly production, and year-over-year trend (2020–2025). Weather-specific charts (Production vs. Temperature, Production vs. Wind Speed, Rainy vs. Non-Rainy day comparison) are being added as part of the current update.
 
-## Baseline Modeling Summary, Linear Regression
+## Baseline Modeling Summary — Linear Regression
 - Built features from the encoded dataset (`Date` dropped after extracting `Year`; `Day_of_Year`, `Month_Name`, `Season`, and weather features retained)
-- Checked for multicollinearity (correlation > 0.9 threshold), no strongly redundant feature pairs found; `Start_Hour`/`End_Hour` showed moderate correlation (0.76) but were both retained since they fell below the threshold
+- Checked for multicollinearity (correlation > 0.9 threshold) — no strongly redundant feature pairs found; `Start_Hour`/`End_Hour` showed moderate correlation (0.76) but were both retained since they fell below the threshold
 - 80/20 train/test split (`random_state=42`)
 - Trained a Linear Regression model as the baseline
 
-**Performance, before vs. after adding weather features:**
+**Performance — before vs. after adding weather features:**
 | Metric | Before (no weather) | After (with weather) |
 |---|---|---|
 | RMSE | 3804.64 MWh | 3631.05 MWh |
 | MAE | 3020.00 MWh | 2883.90 MWh |
 | R² | 0.0809 | 0.1629 |
 
-**Interpretation:** Adding weather features (Temperature, Humidity, Precipitation, Wind Speed, Rainfall Flag) alongside Year nearly doubled the model's R². The actual-vs-predicted plot still shows predictions clustering around the mean rather than tracking the true range, a classic underfitting pattern, confirming that Production depends on non-linear, interactive patterns a straight-line model can't fully capture. This establishes an improved, honest benchmark for XGBoost/LightGBM to beat.
+**Interpretation:** Adding weather features (Temperature, Humidity, Precipitation, Wind Speed, Rainfall Flag) alongside Year nearly doubled the model's R². The actual-vs-predicted plot still shows predictions clustering around the mean rather than tracking the true range — a classic underfitting pattern — confirming that Production depends on non-linear, interactive patterns a straight-line model can't fully capture. This establishes an improved, honest benchmark for XGBoost/LightGBM to beat.
 
-Feature coefficients show seasonal/monthly terms still dominating (`Season_Winter`, `Month_Name_March`, `Month_Name_September`, `Season_Summer`), consistent with the EDA's seasonal findings, along with `Source_Wind` and `Rainfall_Flag_Yes` appearing among the top drivers. Note: continuous weather features (Temperature, Humidity, WindSpeed) did not appear in the top coefficients by raw magnitude, this is expected, since features weren't scaled before training, which biases raw coefficient comparisons toward 0/1 encoded categorical features. SHAP-based interpretability (planned) will give a fairer, scale-independent view of feature importance.
+Feature coefficients show seasonal/monthly terms still dominating (`Season_Winter`, `Month_Name_March`, `Month_Name_September`, `Season_Summer`), consistent with the EDA's seasonal findings, along with `Source_Wind` and `Rainfall_Flag_Yes` appearing among the top drivers. Note: continuous weather features (Temperature, Humidity, WindSpeed) did not appear in the top coefficients by raw magnitude — this is expected, since features weren't scaled before training, which biases raw coefficient comparisons toward 0/1 encoded categorical features. SHAP-based interpretability (planned) will give a fairer, scale-independent view of feature importance.
 
 Chart saved in `Visualisations/Models/`: actual-vs-predicted and residual plots.
 
 ## Status
 - Data Preparation: complete (updated with weather features)
 - EDA: complete (weather-specific charts and updated correlation heatmap in progress)
-- Baseline Model (Linear Regression): complete, updated with weather features
-- Advanced Modeling (XGBoost / LightGBM): in progress
+- Baseline Model (Linear Regression): complete — updated with weather features
+- Advanced Modeling (Random Forest / XGBoost): complete — Random Forest R² improved to 0.76 with default parameters
+- Random Forest tuning: tested, found to produce results essentially identical to the untuned model — untuned results used going forward
+- XGBoost tuning: in progress — hit a memory-related crash (`TerminatedWorkerError`) during GridSearchCV due to running all CPU cores in parallel on the full 3-fold search grid; re-running with reduced parallel workers
+- Model Comparison + SHAP: pending XGBoost tuning completion
 
 ---
 
@@ -147,7 +148,7 @@ Renewable-Energy-Output-Prediction/
 └── README.md
 ```
 
-`Data/Modified Dataset/` holds the raw dataset after weather features were merged in, but before cleaning, kept separate from `Data/Raw/` so the original source data is never overwritten.
+`Data/Modified Dataset/` holds the raw dataset after weather features were merged in, but before cleaning — kept separate from `Data/Raw/` so the original source data is never overwritten.
 
 `Data/ModelResults/` is meant to hold the metrics/output files and saved model (`.pkl`) for every model going forward (baseline and boosting), so results can be compared consistently as new models are added.
 
