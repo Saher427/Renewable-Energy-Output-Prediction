@@ -69,32 +69,45 @@ Weather features were merged in to strengthen prediction accuracy and to support
 
 **Interpretation:** Adding weather features (Temperature, Humidity, Precipitation, Wind Speed, Rainfall Flag) alongside Year nearly doubled the model's R². The actual-vs-predicted plot still shows predictions clustering around the mean rather than tracking the true range — a classic underfitting pattern — confirming that Production depends on non-linear, interactive patterns a straight-line model can't fully capture. This establishes an improved, honest benchmark for XGBoost/LightGBM to beat.
 
-Feature coefficients show seasonal/monthly terms still dominating (`Season_Winter`, `Month_Name_March`, `Month_Name_September`, `Season_Summer`), consistent with the EDA's seasonal findings, along with `Source_Wind` and `Rainfall_Flag_Yes` appearing among the top drivers. Note: continuous weather features (Temperature, Humidity, WindSpeed) did not appear in the top coefficients by raw magnitude — this is expected, since features weren't scaled before training, which biases raw coefficient comparisons toward 0/1 encoded categorical features. SHAP-based interpretability (planned) will give a fairer, scale-independent view of feature importance.
+Feature coefficients show seasonal/monthly terms still dominating (`Season_Winter`, `Month_Name_March`, `Month_Name_September`, `Season_Summer`), consistent with the EDA's seasonal findings, along with `Source_Wind` and `Rainfall_Flag_Yes` appearing among the top drivers. Note: continuous weather features (Temperature, Humidity, WindSpeed) did not appear in the top coefficients by raw magnitude — this is expected, since features weren't scaled before training, which biases raw coefficient comparisons toward 0/1 encoded categorical features. SHAP-based interpretability gave a fairer, scale-independent view (see below).
 
 Chart saved in `Visualisations/Models/`: actual-vs-predicted and residual plots.
 
-## Final Model Comparison — Linear Regression vs. Random Forest vs. Tuned XGBoost
+## Advanced Modeling & Final Comparison
 
+Random Forest and XGBoost were trained with default parameters, then XGBoost was tuned using GridSearchCV (Random Forest tuning was tested separately and found to produce results essentially identical to the untuned version, so the default Random Forest results are used in the final comparison).
+
+**Final Model Comparison:**
 | Model | RMSE (MWh) | MAE (MWh) | R² |
 |---|---|---|---|
-| **XGBoost (Tuned)** | **1555.44** | **1142.42** | **0.846** |
-| Random Forest | 1930.28 | 1315.89 | 0.763 |
-| Linear Regression (baseline) | 3631.05 | 2883.90 | 0.163 |
+| Linear Regression | 3631.05 | 2883.90 | 0.1629 |
+| Random Forest | 1991.66 | 1382.90 | 0.7481 |
+| **XGBoost (Tuned)** | **1537.77** | **1126.88** | **0.8499** |
 
-**Best-performing model: XGBoost (Tuned)** — selected as the final model for this phase of the project.
+**Best Model: XGBoost (Tuned)** — achieved the lowest error and highest R² of all models tested, and is selected as the final production model for the dashboard.
 
-**Interpretation:** Hyperparameter tuning pushed XGBoost from being slightly behind Random Forest (as an untuned model) to clearly ahead of it — improving RMSE by ~19% and R² by over 8 percentage points relative to Random Forest, and roughly 5x better R² than the linear baseline. This confirms the relationship between weather/time features and Production is strongly non-linear, and that boosting's sequential error-correction approach captures that structure better than a single bagged ensemble once properly tuned.
+## Interpretability — SHAP
 
-Comparison chart saved in `Visualisations/Models/`. Full results saved to `Data/ModelResults/final_model_comparison.csv`.
+SHAP (TreeExplainer) was applied to the final tuned XGBoost model. The top features by mean |SHAP value| are `Year`, `Day_of_Year`, `Start_Hour`, and `End_Hour` — the temporal features dominate, more so than the linear baseline's coefficients suggested. `Source_Wind` ranks 5th, confirming Wind's higher output vs. Solar, and weather features (`Temperature_C`, `Humidity_Percent`, `WindSpeed_kmh`) follow with moderate, fairly symmetric influence.
+
+`Year` and `Day_of_Year` outranking the one-hot seasonal/monthly dummies makes sense for a tree-based model: `Day_of_Year` is continuous with 366 possible values, letting XGBoost find much finer seasonal splits than a blunt 4-category `Season` dummy can offer — consistent with the clear cyclical (red/blue banding) pattern seen in the SHAP plot, and with the seasonal cycle already identified in EDA.
+
+Chart saved in `Visualisations/Models/shap_summary.png`.
+
+## Known Limitation Being Investigated: Wind/Solar Subgroup Performance
+
+Since Wind makes up 82% of the dataset and Solar only 18%, we're checking whether the final model performs comparably on both subsets, or whether it implicitly favors Wind due to the class imbalance (a concern our EDA also flagged: *"consider separate models for Wind and Solar"*). This is evaluated by splitting test-set predictions by `Source_Wind` and computing RMSE/MAE/R² separately for each. Results and any resulting model adjustment (e.g. sample weighting or separate Wind/Solar models) will be added here once complete.
 
 ## Status
 - Data Preparation: complete (updated with weather features)
-- EDA: complete (weather-specific charts and updated correlation heatmap in progress)
-- Baseline Model (Linear Regression): complete — updated with weather features
-- Advanced Modeling (Random Forest / XGBoost): complete — Random Forest R² improved to 0.76 with default parameters
-- Random Forest tuning: tested, found to produce results essentially identical to the untuned model — untuned results used going forward
-- XGBoost tuning: in progress — hit a memory-related crash (`TerminatedWorkerError`) during GridSearchCV due to running all CPU cores in parallel on the full 3-fold search grid; re-running with reduced parallel workers
-- Model Comparison + SHAP: pending XGBoost tuning completion
+- EDA: complete
+- Baseline Model (Linear Regression): complete
+- Advanced Modeling (Random Forest / XGBoost): complete
+- Hyperparameter Tuning: complete — XGBoost tuned via GridSearchCV; Random Forest tuning tested, no meaningful improvement found
+- Model Comparison: complete — XGBoost (Tuned) selected as final model
+- SHAP Interpretability: complete
+- Wind/Solar subgroup performance check: in progress
+- Dashboard (Prediction Feature): in progress
 
 ---
 
@@ -148,23 +161,27 @@ Renewable-Energy-Output-Prediction/
 │   │   ├── Cleaned_Readable_Data.csv            # cleaned, readable labels (for EDA)
 │   │   └── Cleaned_Production_Data.csv          # cleaned, one-hot encoded (for modeling)
 │   └── ModelResults/
-│       ├── baseline_model_results.csv           # RMSE / MAE / R2 per model
-│       ├── baseline_model_coefficients.csv      # feature coefficients
-│       └── baseline_linear_regression.pkl       # saved trained model
+│       ├── baseline_model_results.csv
+│       ├── baseline_model_coefficients.csv
+│       ├── baseline_linear_regression.pkl
+│       ├── advanced_model_results.csv           # Random Forest + XGBoost (default)
+│       ├── random_forest_model.pkl
+│       ├── tuned_xgboost_results.csv
+│       ├── tuned_xgboost_model.pkl
+│       └── final_model_comparison.csv
 ├── Notebooks/
-│   ├── DataCleaning.ipynb
-│   ├── EDA.ipynb
-│   └── BaselineModel.ipynb
+│   ├── Complete_Renewable_Energy_Pipeline.ipynb  # full pipeline: cleaning → EDA → models → tuning → comparison → SHAP
+│   └── WeatherFeatureEngineering.ipynb           # documents how weather data was merged into the raw dataset
+├── Dashboard/
+│   └── app.py                                    # Streamlit prediction dashboard
 ├── Visualisations/
-│   ├── EDA/                                      # EDA plot images
-│   └── Models/                                   # model diagnostic plots (actual vs predicted, residuals)
+│   ├── EDA/
+│   └── Models/
 ├── requirements.txt
 └── README.md
 ```
 
-`Data/Modified Dataset/` holds the raw dataset after weather features were merged in, but before cleaning — kept separate from `Data/Raw/` so the original source data is never overwritten.
-
-`Data/ModelResults/` is meant to hold the metrics/output files and saved model (`.pkl`) for every model going forward (baseline and boosting), so results can be compared consistently as new models are added.
+`Data/ModelResults/` holds the metrics/output files and saved models (`.pkl`) for every model trained, so results can be compared consistently and reloaded without retraining (used directly by the dashboard).
 
 ---
 
