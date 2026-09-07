@@ -4,3 +4,5 @@
 "*.pkl" 
 "Data/ModelResults/*.pkl" 
 "Data/ModelResults/*.pkl" 
+"Data/ModelResults/*.pkl" 
+"*.pkl" 
