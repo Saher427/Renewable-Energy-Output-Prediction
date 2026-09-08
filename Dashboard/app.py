@@ -5,12 +5,13 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# Sirf predict_energy import karein, build_feature_row nahi
+# Sirf predict_energy import karein
 from Prediction_Engine import predict_energy
+from weather_fetch import fetch_weather_forecast
 
 # PAGE CONFIG
 st.set_page_config(page_title="Energy Predictor", layout="wide")
-
+    
 # DESIGN SYSTEM
 COLOR_BG = "#0A0E17"
 COLOR_SURFACE = "#121826"
@@ -46,7 +47,6 @@ st.markdown(
         letter-spacing: -0.01em;
     }}
 
-    /* Masthead */
     .app-title {{
         font-family: 'Space Grotesk', sans-serif;
         font-size: 2.1rem;
@@ -65,7 +65,6 @@ st.markdown(
         background: linear-gradient(90deg, {COLOR_SOLAR}, {COLOR_WIND} 65%, transparent);
     }}
 
-    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 1.6rem;
         border-bottom: 1px solid {COLOR_BORDER};
@@ -86,7 +85,6 @@ st.markdown(
         height: 2px;
     }}
 
-    /* Panels */
     .panel {{
         background: {COLOR_SURFACE};
         border: 1px solid {COLOR_BORDER};
@@ -98,7 +96,6 @@ st.markdown(
         font-size: 1.05rem;
     }}
 
-    /* Inputs */
     [data-testid="stSlider"] [role="slider"] {{
         background-color: {COLOR_WIND} !important;
     }}
@@ -119,7 +116,6 @@ st.markdown(
         font-weight: 500 !important;
     }}
 
-    /* Predict button */
     div.stButton > button {{
         background: linear-gradient(90deg, {COLOR_SOLAR}, {COLOR_WIND});
         color: #0A0E17;
@@ -136,7 +132,6 @@ st.markdown(
         color: #0A0E17;
     }}
 
-    /* Result hero card */
     .hero {{
         border-radius: 12px;
         padding: 2rem 1.8rem;
@@ -160,11 +155,6 @@ st.markdown(
         font-size: 1.1rem;
         color: {COLOR_MUTED};
         font-weight: 500;
-    }}
-    .hero-note {{
-        margin-top: 1rem;
-        color: {COLOR_TEXT};
-        font-size: 0.92rem;
     }}
     @keyframes hero-in {{
         from {{ opacity: 0; transform: translateY(6px); }}
@@ -194,9 +184,7 @@ st.markdown('<hr class="app-rule">', unsafe_allow_html=True)
 # TABS
 tab1, tab2, tab3 = st.tabs(["Prediction", "Data Insights", "Model Performance"])
 
-# ----------------------------------------------------------------------------
 # TAB 1: PREDICTION
-# ----------------------------------------------------------------------------
 with tab1:
     st.header("Predict Energy Output")
 
@@ -227,7 +215,7 @@ with tab1:
     with col_result:
         if predict_btn:
             try:
-                # ✅ CORRECT: predict_energy ko raw arguments pass karein
+                #  CORRECT: predict_energy ko raw arguments pass karein
                 prediction = predict_energy(
                     date=date,
                     start_hour=start_hour,
@@ -273,9 +261,7 @@ with tab1:
                 unsafe_allow_html=True,
             )
 
-# ----------------------------------------------------------------------------
-# TAB 2: DATA INSIGHTS (AAP KA EDA)
-# ----------------------------------------------------------------------------
+# TAB 2: DATA INSIGHTS
 with tab2:
     st.header("Exploratory Data Analysis")
     st.caption("Key visualizations from the dataset (2020–2025)")
@@ -290,9 +276,7 @@ with tab2:
         st.image("Visualisations/EDA/13_production_vs_windspeed.png", caption="Production vs Wind Speed")
         st.image("Visualisations/EDA/5_production_by_season.png", caption="Winter has highest production")
 
-# ----------------------------------------------------------------------------
 # TAB 3: MODEL PERFORMANCE
-# ----------------------------------------------------------------------------
 with tab3:
     st.header("Model Performance Comparison")
 
