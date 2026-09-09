@@ -81,18 +81,38 @@ st.markdown(
 
     div[data-baseweb="select"] > div,
     [data-testid="stNumberInput"] input,
-    [data-testid="stDateInput"] input,
     [data-testid="stTextInput"] input {{
         background-color: {COLOR_SURFACE_ALT} !important;
         border: 1px solid {COLOR_BORDER} !important;
         color: {COLOR_TEXT} !important;
         border-radius: 7px !important;
     }}
+
+    /* Date input kept light (matches its native calendar popup, which we can't fully re-theme) */
+    [data-testid="stDateInput"] div[data-baseweb="input"],
+    [data-testid="stDateInput"] div[data-baseweb="base-input"],
+    [data-testid="stDateInput"] input {{
+        background-color: #FFFFFF !important;
+        color: #1A2233 !important;
+    }}
+    [data-testid="stDateInput"] input {{
+        border: 1px solid {COLOR_BORDER} !important;
+        border-radius: 7px !important;
+        -webkit-text-fill-color: #1A2233 !important;
+    }}
+    [data-testid="stDateInput"] svg {{
+        fill: #1A2233 !important;
+    }}
     [data-testid="stSlider"] [role="slider"] {{ background-color: {COLOR_WIND} !important; }}
     .stSlider [data-baseweb="slider"] > div > div {{ background: {COLOR_WIND} !important; }}
 
-    label, .stSlider label, .stSelectbox label, .stNumberInput label, .stDateInput label, .stRadio label, .stTextInput label {{
-        color: {COLOR_MUTED} !important; font-size: 0.85rem !important; font-weight: 600 !important;
+    label, .stSlider label, .stSelectbox label, .stNumberInput label, .stDateInput label, .stRadio label, .stTextInput label,
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stWidgetLabel"] label {{
+        color: {COLOR_MUTED} !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
     }}
 
     div.stButton > button {{
@@ -158,12 +178,12 @@ with tab1:
                 max_value=datetime.today() + timedelta(days=3)
             )
         with b1c2:
-            start_hour = st.slider("Start Hour", 0, 23, 14)
+            start_hour = st.slider("Start Hour", 0, 23, 14, key="start_hour_slider")
             end_hour = (start_hour + 1) % 24
         with b1c3:
-            source = st.selectbox("Energy Source", ["Wind", "Solar"])
+            source = st.selectbox("Energy Source", ["Wind", "Solar"], key="source_select")
         with b1c4:
-            input_mode = st.radio("Weather source", ["Enter manually", "Fetch by city (live)"])
+            input_mode = st.radio("Weather source", ["Enter manually", "Fetch by city (live)"], key="weather_mode")
         st.caption(
             f"Prediction window: **{start_hour:02d}:00 -> {end_hour:02d}:00**  |  "
             f"Live forecast covers today + 3 days ahead"
@@ -178,20 +198,20 @@ with tab1:
         if input_mode == "Enter manually":
             b2c1, b2c2, b2c3, b2c4, b2c5 = st.columns(5)
             with b2c1:
-                temperature = st.slider("Temperature (°C)", -10.0, 50.0, 25.0, 0.5)
+                temperature = st.slider("Temperature (°C)", -10.0, 50.0, 25.0, 0.5, key="manual_temp")
             with b2c2:
-                humidity = st.slider("Humidity (%)", 0, 100, 60)
+                humidity = st.slider("Humidity (%)", 0, 100, 60, key="manual_humidity")
             with b2c3:
-                wind_speed = st.slider("Wind Speed (km/h)", 0.0, 50.0, 10.0, 0.5)
+                wind_speed = st.slider("Wind Speed (km/h)", 0.0, 50.0, 10.0, 0.5, key="manual_windspeed")
             with b2c4:
-                precipitation = st.number_input("Precipitation (mm)", 0.0, 50.0, 0.0, 0.1)
+                precipitation = st.number_input("Precipitation (mm)", 0.0, 50.0, 0.0, 0.1, key="manual_precip")
             with b2c5:
-                rainfall = st.selectbox("Rainfall Flag", ["No", "Yes"])
+                rainfall = st.selectbox("Rainfall Flag", ["No", "Yes"], key="manual_rainfall")
 
         else:
             city_col, metrics_col = st.columns([1, 3])
             with city_col:
-                city = st.text_input("City name", placeholder="e.g. Lahore")
+                city = st.text_input("City name", placeholder="e.g. Lahore", key="city_input")
 
             if city:
                 with st.spinner(f"Fetching weather for {city}..."):
