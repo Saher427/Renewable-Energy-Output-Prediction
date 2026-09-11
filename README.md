@@ -1,4 +1,4 @@
-# Predicting Renewable Energy Output for Smart Grid Balancing
+# RenewCast — Forecasting Renewable Energy Output for Smart Grid Balancing
 
 ## Problem Statement
 Can we predict how much renewable energy (solar/wind) will be available at a given time, based on weather conditions and time-based patterns, to help power grids balance supply between renewable and traditional energy sources?
